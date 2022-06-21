@@ -13,6 +13,8 @@
 #define c_sll(a, b) ((a) << ((b) & c_shift_mask))
 #define c_srl(a, b) ((a) >> ((b) & c_shift_mask))
 #define c_sra(a, b) ((sword_t)(a) >> ((b) & c_shift_mask))
+//important: sword_t is very important in signal extension
+#define c_sext(a,num) ( ((sword_t)a<<num)>>num )
 
 #ifdef CONFIG_ISA64
 #define c_sext32to64(a) ((int64_t)(int32_t)(a))
