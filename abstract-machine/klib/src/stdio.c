@@ -5,8 +5,14 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
+#if defined(CONFIG_ISA64)
+  typedef uint64_t word_t;
+#else
+  typedef uint32_t word_t;
+#endif
+
 #define NUM_LEN 32
-#define OSTRING_LEN 256
+#define OSTRING_LEN 5120
 
 int printf(const char *fmt, ...) {
   char out[OSTRING_LEN];
@@ -28,8 +34,10 @@ char* __itoa(int num, char* buff, uint16_t base){
 
   char tmp[NUM_LEN];
   bool is_neg = false;
-  if(num < 0){ is_neg = true; buff[0] = '-'; buff++; num = -num; }
-  else if(num == 0){buff[0]='0';buff[1]='\0';return buff;}
+  if(num == 0){buff[0]='0';buff[1]='\0';return buff;}
+  else if(num < 0){ is_neg = true; buff[0] = '-'; buff++; num = -num; }
+   
+  if(base == 16){*(buff++)='0'; *(buff++)='x';}
 
   uint8_t i = 0;
   while(num != 0){
@@ -45,6 +53,29 @@ char* __itoa(int num, char* buff, uint16_t base){
   return is_neg? (buff-1) : buff;
 }
 
+char* __ptoa(void *p, char *buff){
+  static const char sym[] = "0123456789abcdef";
+
+  word_t num = (word_t)p;
+  char tmp[NUM_LEN];
+
+  *(buff++)='0'; *(buff++)='x';
+  if(num == 0){buff[0]='0'; buff[2]='\0';return (buff-2);}
+
+
+  uint8_t i = 0;
+  while(num != 0){
+    tmp[i] = sym[num % 16];
+    num /= 16;
+    i++;
+  }
+
+  for(int j = i-1; j >= 0; --j)
+    buff[i-1-j] = tmp[j];
+  buff[i] = '\0'; 
+
+  return (buff-2);
+}
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
   char *pout = out;
@@ -94,7 +125,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
             int val = va_arg(ap, int);
             
             char buff[NUM_LEN]; 
-            __itoa(val,buff, (fmt[i] == 'x')?16:10);
+            __itoa(val, buff, (fmt[i] == 'x')?16:10);
             if(!left_align){
               for(int j = 0; j < width - (int)strlen(buff); ++j) *(pout++) = num_leftpad_sym;
               strcpy(pout, buff);
@@ -108,10 +139,29 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
             is_end = true;
             break;
           }
-          default:
-          printf("print format is wrong!\n");
-          //Wrong format!!!
-          assert(0);
+          case 'p': {
+            void *val = va_arg(ap, void*);
+
+            char buff[NUM_LEN]; 
+            __ptoa(val, buff);
+            if(!left_align){
+              for(int j = 0; j < width - (int)strlen(buff); ++j) *(pout++) = num_leftpad_sym;
+              strcpy(pout, buff);
+              pout += strlen(buff);
+            }
+            else{
+              strcpy(pout, buff);
+              pout += strlen(buff);
+              for(int j = 0; j < width - (int)strlen(buff); ++j) *(pout++) = num_leftpad_sym;
+            }
+            is_end = true;
+            break;
+          }
+          default:{
+            printf("print format is wrong!\n");
+            //Wrong format!!!
+            assert(0);
+          }
         }
       }
     }
