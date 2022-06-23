@@ -35,8 +35,8 @@ static struct rule {
   {"\\)", ')'},
   {"!=", TK_UEQ},
   {"&&", TK_AND},
-  {"\\$(a[0-7]|t[0-6p]|s[0-9p]|s1[0-1]|ra|gp)", TK_REG},
-  {"\\b0x[0-9]+\\b", TK_HEX},
+  {"\\$(a[0-7]|t[0-6p]|s[0-9p]|s1[0-1]|ra|gp|pc|mtvec|mstatus|mepc|mcause)", TK_REG},
+  {"\\b0x[0-9a-fA-F]+\\b", TK_HEX},
 };
 
 
@@ -84,7 +84,7 @@ static bool make_token(char *e) {
         int substr_len = pmatch.rm_eo;
 
         // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            // i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        //     i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
         position += substr_len;
 
@@ -101,7 +101,8 @@ static bool make_token(char *e) {
             Assert(substr_len < sizeof(tokens[nr_token].str)/sizeof(tokens[nr_token].str[0]), "The Token length is out of bound!");
             // memset(tokens[nr_token].str, '\0', sizeof(tokens[nr_token].str));
             // important bug!
-            strncpy(tokens[nr_token].str,substr_start,substr_len+1);
+            strncpy(tokens[nr_token].str,substr_start,substr_len);
+            tokens[nr_token].str[substr_len] = '\0';
           }
           default:{
             tokens[nr_token].type = rules[i].token_type;
@@ -196,8 +197,9 @@ static Result eval(Token *tokens, int p,int q) {
     else if(tokens[p].type == TK_HEX) { res.exp_data = strtol(tokens[p].str + 2, NULL, 16);}
     else if(tokens[p].type == TK_REG){
       bool success = false;
-      res.exp_data = isa_reg_str2val(tokens[p].str, &success);
+      res.exp_data = isa_reg_str2val(tokens[p].str , &success);
       if(success == false){/* printf("Invalid register!");*/ res.is_valid = false; }
+      // Log("reg %s is %d\n", tokens[p].str, isa_reg_str2val(tokens[p].str , &success));
     }
     res.is_valid = true;
     return res;
@@ -243,8 +245,9 @@ static Result eval(Token *tokens, int p,int q) {
         case '*': {res.exp_data = val1.exp_data * val2.exp_data; break;}
         case '/': {res.exp_data = val1.exp_data / val2.exp_data; break;}
         case TK_UEQ : {res.exp_data = (val1.exp_data != val2.exp_data); break;}
+        case TK_EQ : {res.exp_data = (val1.exp_data == val2.exp_data); break;}
         case TK_AND : {res.exp_data = (val1.exp_data && val2.exp_data); break;}
-        default: {/*printf("Invalid operator in expression!");*/ res.is_valid = false; break;}
+        default: {Log("INvalid Operator!"); assert(0);/*printf("Invalid operator in expression!");*/ res.is_valid = false; break;}
       }
       return res;
     }

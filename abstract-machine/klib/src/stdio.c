@@ -37,8 +37,6 @@ char* __itoa(int num, char* buff, uint16_t base){
   if(num == 0){buff[0]='0';buff[1]='\0';return buff;}
   else if(num < 0){ is_neg = true; buff[0] = '-'; buff++; num = -num; }
    
-  if(base == 16){*(buff++)='0'; *(buff++)='x';}
-
   uint8_t i = 0;
   while(num != 0){
     tmp[i] = sym[num % base];
@@ -59,8 +57,7 @@ char* __ptoa(void *p, char *buff){
   word_t num = (word_t)p;
   char tmp[NUM_LEN];
 
-  *(buff++)='0'; *(buff++)='x';
-  if(num == 0){buff[0]='0'; buff[2]='\0';return (buff-2);}
+  if(num == 0){buff[0]='0'; buff[1]='\0';return (buff-1);}
 
 
   uint8_t i = 0;
@@ -74,7 +71,7 @@ char* __ptoa(void *p, char *buff){
     buff[i-1-j] = tmp[j];
   buff[i] = '\0'; 
 
-  return (buff-2);
+  return (buff-1);
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {

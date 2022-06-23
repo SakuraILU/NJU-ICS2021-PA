@@ -3,3 +3,4 @@
 #include "../instr/special.h"
 #include "../instr/jump.h"
 #include "../instr/set.h"
+#include "../instr/csr.h"

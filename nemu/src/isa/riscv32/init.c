@@ -1,6 +1,10 @@
 #include <isa.h>
 #include <memory/paddr.h>
 
+#define CSRS_LIST(f) f(MTVEC), f(MEPC), f( MSTATUS), f(MCAUSE)
+#define REGNAME(name) concat(REG_, name)
+enum{ CSRS_LIST(REGNAME) };
+
 // this is not consistent with uint8_t
 // but it is ok since we do not access the array directly
 static const uint32_t img [] = {

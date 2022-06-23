@@ -18,8 +18,8 @@ function init() {
   git commit -am "$1 $version initialized"$'\n\n'"$log"
 
   if [ $2 ] ; then
-    sed -i -e "/^export $2=.*/d" ~/.bashrc
-    echo "export $2=`readlink -e $1`" >> ~/.bashrc
+    sed -i -e "/^export $2=.*/d" ~/.zshrc
+    echo "export $2=`readlink -e $1`" >> ~/.zshrc
 
     echo "By default this script will add environment variables into ~/.bashrc."
     echo "After that, please run 'source ~/.bashrc' to let these variables take effect."

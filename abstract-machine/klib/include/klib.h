@@ -44,7 +44,6 @@ int    vsnprintf (char *str, size_t size, const char *format, va_list ap);
 // assert.h
 #ifdef NDEBUG
   #define assert(ignore) ((void)0)
-  #define Assert(ignore) ((void)0)
 #else
   #define assert(cond) \
     do { \
@@ -53,15 +52,6 @@ int    vsnprintf (char *str, size_t size, const char *format, va_list ap);
         halt(1); \
       } \
     } while (0)
-
-  #define Assert(cond, ...) \
-      do { \
-        if (!(cond)) { \
-          printf("Assertion fail at %s:%d\n", __FILE__, __LINE__); \
-          printf(__VA_ARGS__); \
-          halt(1); \
-        } \
-      } while (0)
 #endif
 
 #ifdef __cplusplus
