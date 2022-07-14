@@ -155,6 +155,7 @@ Terminal::Terminal(int width, int height) {
       putch(x, y, EMPTY);
     }
   }
+  
 }
 
 Terminal::~Terminal() {
@@ -249,11 +250,11 @@ void Terminal::write(const char *str, size_t count) {
             cursor.y --;
           }
           break;
-        case '\t':
-          // TODO: implement it.
-          break;
         case '\r':
           cursor.x = 0;
+          break;
+        case '\t':
+          for(size_t i = 0; i < 4; ++i) move_one();
           break;
         default:
           putch(cursor.x, cursor.y, ch);
@@ -287,6 +288,15 @@ const char *Terminal::keypress(char ch) {
           inp_len --;
           backspace();
         }
+        break;
+      case '\t':
+        if(inp_len + 4 < sizeof(input)) {
+          for(size_t i = 0; i < 4; ++i){ 
+            input[inp_len ++] = EMPTY;
+          }
+          write(&ch, 1);
+        }
+        // printf("press tab\n");
         break;
       default:
         if (inp_len + 1 < sizeof(input)) {

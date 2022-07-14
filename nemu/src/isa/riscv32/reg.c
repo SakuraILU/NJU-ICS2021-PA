@@ -1,8 +1,8 @@
 #include <isa.h>
 #include "local-include/reg.h"
 
-#define NR_REGS sizeof(regs)/sizeof(regs[0])
-#define NR_CSRS sizeof(csrs)/sizeof(csrs[0])
+#define NR_REGS ARRLEN(regs) //sizeof(regs)/sizeof(regs[0])
+#define NR_CSRS ARRLEN(csrs) //sizeof(csrs)/sizeof(csrs[0])
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -37,5 +37,15 @@ word_t isa_reg_str2val(const char *s, bool *success) {
     if(strcmp(csrs[i], s+1) == 0){ *success = true; return cpu.csr[i]._32;}
   }
   
+  return 0;
+}
+
+int save_regs(FILE* fp){
+  if(fwrite(&cpu, 1, sizeof(cpu), fp) == 0) panic("Fail to save regs in cpu\n");
+  return 0;
+}
+
+int load_regs(FILE* fp){
+  if(fread(&cpu, 1, sizeof(cpu), fp) == 0) panic("Fail to load regs in cpu\n");
   return 0;
 }

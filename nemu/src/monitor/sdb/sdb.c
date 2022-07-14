@@ -7,12 +7,12 @@
 
 static int is_batch_mode = false;
 
-void init_regex();
-void init_wp_pool();
+// void init_regex();
+// void init_wp_pool();
 
 void isa_reg_display();
 word_t vaddr_read(vaddr_t addr, int len);
-word_t expr(char *e, bool *success);
+// word_t expr(char *e, bool *success);
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -115,6 +115,45 @@ static int cmd_d(char *args){
   return 0;
 }
 
+// extern NEMUState nemu_state;
+int save_mem(FILE *fp);
+int save_regs(FILE* fp);
+#define FILENAME_LEN 128
+static int cmd_save(char *args){
+  if(args == NULL) return 0;
+  char *history_name = strtok(NULL, " ");
+
+  char *home_path = getenv("NEMU_HOME");
+  char filename[FILENAME_LEN];
+  strcpy(filename, home_path);
+  strcat(filename, "/src/monitor/nemu_history/");
+  strcat(filename, history_name);
+
+  FILE* fp = fopen(filename, "w");
+  int ret = save_regs(fp);
+  ret = save_mem(fp);
+  
+  return ret;
+}
+int load_mem(FILE *fp);
+int load_regs(FILE* fp);
+static int cmd_load(char *args){
+  if(args == NULL) return 0;
+  char *history_name = strtok(NULL, " ");
+
+  char *home_path = getenv("NEMU_HOME");
+  char filename[FILENAME_LEN];
+  strcpy(filename, home_path);
+  strcat(filename, "/src/monitor/nemu_history/");
+  strcat(filename, history_name);
+
+  FILE* fp = fopen(filename, "r");
+  int ret = load_regs(fp);
+  ret = load_mem(fp);
+  
+  return ret;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -131,7 +170,9 @@ static struct {
   { "x" , "Evaluate the expression EXPR, using the result as the starting memory address, output N consecutive 4-bytes in hexadecimal", cmd_x},
   { "p", "Evaluate the expression EXPR", cmd_p},
   { "w", "Suspend program execution when the value of the expression EXPR changes", cmd_w},
-  { "d", "Delete the watchpoint with sequence number N", cmd_d},
+  { "d", "delete the watchpoint with sequence number n", cmd_d},
+  { "save", "save the snapshot of nemu", cmd_save},
+  { "load", "load the snapshot of nemu", cmd_load},
 };
 
 #define NR_CMD ARRLEN(cmd_table)

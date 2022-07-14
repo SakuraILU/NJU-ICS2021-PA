@@ -11,18 +11,24 @@ void display_context(Context *c){
 }
 
 Context* __am_irq_handle(Context *c) {
+  // printf("cause to interrupt is %d\n",c->GPR1);
   // display_context(c);
   if (user_handler) {
-    // printf("the event id is %d", c->mcause);
+    // printf("the exception cause id is %d\n", c->mcause);
     Event ev = {0};
+    
+    // for(int i = 0; i< 1000;++i){;}
     switch (c->mcause) {
       case -1: ev.event = EVENT_YIELD; break;
+      case  0 ... 19: ev.event = EVENT_SYSCALL; break;
       default: ev.event = EVENT_ERROR; break;
     }
 
+    // printf("event id is %d\n",ev.event);
     c = user_handler(ev, c);
     assert(c != NULL);
   }
+  // printf("ret from interrupt is %d\n",c->GPRx);
 
   return c;
 }
@@ -44,7 +50,6 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
 }
 
 void yield() {
-  //11: Environment call from M-mode
   asm volatile("li a7, -1; ecall");
 }
 

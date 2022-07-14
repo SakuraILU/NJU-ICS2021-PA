@@ -29,12 +29,12 @@ int printf(const char *fmt, ...) {
   return num;
 }
 
-char* __itoa(int num, char* buff, uint16_t base){
+static char* __itoa(int num, char* buff, uint16_t base){
   static const char sym[] = "0123456789abcdef";
 
   char tmp[NUM_LEN];
   bool is_neg = false;
-  if(num == 0){buff[0]='0';buff[1]='\0';return buff;}
+  if(num == 0){strcat(buff, "0"); return buff;}
   else if(num < 0){ is_neg = true; buff[0] = '-'; buff++; num = -num; }
    
   uint8_t i = 0;
@@ -51,7 +51,7 @@ char* __itoa(int num, char* buff, uint16_t base){
   return is_neg? (buff-1) : buff;
 }
 
-char* __ptoa(void *p, char *buff){
+static char* __ptoa(void *p, char *buff){
   static const char sym[] = "0123456789abcdef";
 
   word_t num = (word_t)p;

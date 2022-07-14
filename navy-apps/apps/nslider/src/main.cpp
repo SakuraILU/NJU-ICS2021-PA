@@ -2,6 +2,7 @@
 #include <SDL_bmp.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #define W 400
 #define H 300
@@ -12,12 +13,13 @@
 //   gg - first page
 
 // number of slides
-const int N = 10;
+#define N 6
 // slides path pattern (starts from 0)
 const char *path = "/share/slides/slides-%d.bmp";
 
 static SDL_Surface *slide = NULL;
 static int cur = 0;
+
 
 void render() {
   if (slide) {
@@ -25,6 +27,7 @@ void render() {
   }
   char fname[256];
   sprintf(fname, path, cur);
+  // printf("pathname is %s\n",fname);
   slide = SDL_LoadBMP(fname);
   assert(slide);
   SDL_UpdateRect(slide, 0, 0, 0, 0);
@@ -48,15 +51,18 @@ int main() {
   SDL_Init(0);
   SDL_Surface *screen = SDL_SetVideoMode(W, H, 32, SDL_HWSURFACE);
 
+
   int rep = 0, g = 0;
 
   render();
+  // prev(0);
 
   while (1) {
     SDL_Event e;
     SDL_WaitEvent(&e);
 
     if (e.type == SDL_KEYDOWN) {
+      printf("here\n");
       switch(e.key.keysym.sym) {
         case SDLK_0: rep = rep * 10 + 0; break;
         case SDLK_1: rep = rep * 10 + 1; break;
@@ -68,10 +74,11 @@ int main() {
         case SDLK_7: rep = rep * 10 + 7; break;
         case SDLK_8: rep = rep * 10 + 8; break;
         case SDLK_9: rep = rep * 10 + 9; break;
-        case SDLK_J:
+        case SDLK_J: 
         case SDLK_DOWN: next(rep); rep = 0; g = 0; break;
         case SDLK_K:
         case SDLK_UP: prev(rep); rep = 0; g = 0; break;
+        case SDLK_Q: SDL_Quit(); exit(0); break;
         case SDLK_G:
           g ++;
           if (g > 1) {
