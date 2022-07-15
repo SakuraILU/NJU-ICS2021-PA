@@ -2,26 +2,35 @@
 #include <riscv/riscv.h>
 #include <klib.h>
 
-static Context* (*user_handler)(Event, Context*) = NULL;
+static Context *(*user_handler)(Event, Context *) = NULL;
 
-void display_context(Context *c){
-  for(int i = 0; i < sizeof(c->gpr)/sizeof(c->gpr[0]); ++i)
+void display_context(Context *c)
+{
+  for (int i = 0; i < sizeof(c->gpr) / sizeof(c->gpr[0]); ++i)
     printf("x%d is %d\n", i, c->gpr[i]);
   printf("mcause, mstatus, mepc is %p, %p, %p\n", c->mcause, c->mstatus, c->mepc);
 }
 
-Context* __am_irq_handle(Context *c) {
+Context *__am_irq_handle(Context *c)
+{
   // printf("cause to interrupt is %d\n",c->GPR1);
   // display_context(c);
-  if (user_handler) {
+  if (user_handler)
+  {
     // printf("the exception cause id is %d\n", c->mcause);
     Event ev = {0};
-    
-    // for(int i = 0; i< 1000;++i){;}
-    switch (c->mcause) {
-      case -1: ev.event = EVENT_YIELD; break;
-      case  0 ... 19: ev.event = EVENT_SYSCALL; break;
-      default: ev.event = EVENT_ERROR; break;
+
+    switch (c->mcause)
+    {
+    case -1:
+      ev.event = EVENT_YIELD;
+      break;
+    case 0 ... 19:
+      ev.event = EVENT_SYSCALL;
+      break;
+    default:
+      ev.event = EVENT_ERROR;
+      break;
     }
 
     // printf("event id is %d\n",ev.event);
@@ -35,9 +44,12 @@ Context* __am_irq_handle(Context *c) {
 
 extern void __am_asm_trap(void);
 
-bool cte_init(Context*(*handler)(Event, Context*)) {
+bool cte_init(Context *(*handler)(Event, Context *))
+{
   // initialize exception entry
-  asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
+  asm volatile("csrw mtvec, %0"
+               :
+               : "r"(__am_asm_trap));
 
   // register event handler
   user_handler = handler;
@@ -45,17 +57,21 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
   return true;
 }
 
-Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
+Context *kcontext(Area kstack, void (*entry)(void *), void *arg)
+{
   return NULL;
 }
 
-void yield() {
+void yield()
+{
   asm volatile("li a7, -1; ecall");
 }
 
-bool ienabled() {
+bool ienabled()
+{
   return false;
 }
 
-void iset(bool enable) {
+void iset(bool enable)
+{
 }

@@ -53,7 +53,7 @@ static Finfo file_table[] __attribute__((used)) = {
     [FD_STDOUT] = {"stdout", 0, 0, 0, invalid_read, serial_write},
     [FD_STDERR] = {"stderr", 0, 0, 0, invalid_read, serial_write},
     {"/dev/events", 0, 0, 0, events_read, invalid_write},
-    {"/proc/dispinfo", 0, 0, 0, dispinfo_read, invalid_write},
+    {"/proc/dispinfo", 50, 0, 0, dispinfo_read, invalid_write},
     {"/dev/fb", 0, 0, 0, invalid_read, fb_write},
 #include "files.h"
 };
@@ -144,8 +144,8 @@ size_t fs_read(int fd, void *buf, size_t len)
 
 size_t fs_lseek(int fd, size_t offset, int whence)
 {
-  // printf("change seek\n");
-  assert(fd > 4 && fd < NR_FILE);
+  // printf("change seek of fd %d\n", fd);
+  assert(fd > 3 && fd < NR_FILE);
   switch (whence)
   {
   case SEEK_SET:
