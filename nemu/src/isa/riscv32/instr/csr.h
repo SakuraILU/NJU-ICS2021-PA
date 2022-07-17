@@ -27,9 +27,11 @@ static inline uint8_t csr_id_instr2array(uint32_t instr_id)
   }
 }
 
+void difftest_skip_ref();
 #define csr(idx) (cpu.csr[csr_id_instr2array(idx)]._32)
 def_EHelper(csrrw)
 {
+  // difftest_skip_ref();
   rtl_mv(s, s0, &csr(id_src2->imm));
   rtl_mv(s, &csr(id_src2->imm), id_src1->preg);
   rtl_mv(s, id_dest->preg, s0);
@@ -37,6 +39,7 @@ def_EHelper(csrrw)
 
 def_EHelper(csrrs)
 {
+  // difftest_skip_ref();
   rtl_mv(s, s0, &csr(id_src2->imm));
   rtl_or(s, &csr(id_src2->imm), s0, id_src1->preg);
   rtl_mv(s, id_dest->preg, s0);
@@ -50,12 +53,12 @@ def_EHelper(ecall)
   // Log("trap number is %d\n", trap_no);
   if (!success)
     Assert(0, "Invalid gpr register!");
-  word_t trap_vec = isa_raise_intr(trap_no, cpu.pc);
+  word_t trap_vec = isa_raise_intr(trap_no, s->snpc);
   rtl_j(s, trap_vec);
 }
 
 def_EHelper(mret)
 {
   // Log("return!\n");
-  rtl_j(s, cpu.csr[REG_MEPC]._32 + 4);
+  rtl_j(s, cpu.csr[REG_MEPC]._32);
 }

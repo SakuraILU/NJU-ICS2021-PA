@@ -37,7 +37,17 @@ static int cmd_exit(char *args)
 
 static int cmd_echo(char *args)
 {
-  args = strtok(NULL, " ");
+  // printf("arg is %s\n", args);
+  if (args == NULL)
+  {
+    sh_printf("\n");
+    return 0;
+  }
+
+  // args = strtok(NULL, "");
+  if (strlen(args) == 1 && (args[0] == '\"' || args[0] == '\''))
+    return -1;
+
   if ((args[0] == '\'' && args[strlen(args) - 1] == '\'') ||
       (args[0] == '\"' && args[strlen(args) - 1] == '\"'))
   {
@@ -65,34 +75,79 @@ static struct
     {"echo", cmd_echo},
 };
 
+static size_t get_argc(char *str)
+{
+  size_t i = 0;
+  if (strtok(str, " ") == NULL)
+    return i;
+  else
+    i++;
+
+  while (strtok(NULL, " ") != NULL)
+    i++;
+  return i;
+}
+
+static void get_argv(char *cmd, char **argv)
+{
+  int argc = 0;
+
+  // printf("cmd is %s\n", cmd);
+  argv[argc++] = strtok(cmd, " ");
+  // printf("argv0 %s\n", argv[0]);
+
+  while (true)
+  {
+    argv[argc++] = strtok(NULL, " ");
+    if (argv[argc - 1] == NULL)
+      break;
+    // printf("argv%d %s\n", argc, argv[argc]);
+  }
+  return;
+}
+
 static void sh_handle_cmd(const char *cmd)
 {
-  // printf("cmd is %s\n",cmd);
+  printf("\n");
+  // printf("here\n");
+  // printf("cmd is %s\n", cmd);
   if (cmd[0] == '\n')
     return;
 
-  char *cmd_str = (char *)cmd;
-  cmd_str = strtok(cmd_str, "\n");
-  char *cmd_end = cmd_str + strlen(cmd_str);
+  char cmd_cpy[strlen(cmd) + 1];
+  char *cmd_extract = strtok(strcpy(cmd_cpy, cmd), "\n");
+  char *cmd_name = strtok(cmd_extract, " ");
+  char *args = strtok(NULL, "");
+  // char *cmd_end = cmd_extract + strlen(cmd_extract);
 
-  cmd = strtok(cmd_str, " ");
-  char *args = cmd_str + strlen(cmd_str) + 1;
-  if (args > cmd_end)
-    args = NULL;
+  // char *args = cmd_name + strlen(cmd_name) + 1;
+  // printf("cmd is %s, args is %s\n", cmd_name, args);
+  // if (args > cmd_end)
+  //   args = NULL;
 
-  // printf("cmd is %s, args is %s\n",cmd, args);
   for (size_t i = 0; i < NR_CMD; ++i)
   {
-    if (strcmp(cmd, cmd_table[i].cmd_name) == 0)
+    // printf("compare %s with %s\n", cmd_name, cmd_table[i].cmd_name);
+    if (strcmp(cmd_name, cmd_table[i].cmd_name) == 0)
     {
       if (cmd_table[i].handler(args) < 0)
-        sh_printf("  > Invalid Command\n");
-      else
-        return;
+        sh_printf("sh: invalid command\n");
+      return;
     }
   }
 
-  execvp(cmd, NULL);
+  cmd_extract = strtok(strcpy(cmd_cpy, cmd), "\n");
+  int argc = get_argc(cmd_extract);
+  // printf("argc is %d\n", argc);
+
+  char *(argv[argc + 1]) = {NULL};
+  cmd_extract = strtok(strcpy(cmd_cpy, cmd), "\n");
+
+  get_argv(cmd_extract, argv);
+  // printf("argv0 is %s\n", argv[0]);
+
+  if (execvp(argv[0], argv) < 0)
+    sh_printf("sh: command not found: %s\n", argv[0]);
 
   return;
 }
@@ -102,7 +157,7 @@ void builtin_sh_run()
   sh_banner();
   sh_prompt();
 
-  setenv("PATH", "/bin", 0);
+  setenv("PATH", "/bin:/usr/bin", 0);
   while (1)
   {
     SDL_Event ev;
@@ -111,6 +166,7 @@ void builtin_sh_run()
       if (ev.type == SDL_KEYUP || ev.type == SDL_KEYDOWN)
       {
         const char *res = term->keypress(handle_key(&ev));
+        // printf("res is %s\n", res);
         if (res)
         {
           sh_handle_cmd(res);

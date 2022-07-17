@@ -20,6 +20,7 @@ static const char *keyname[256] __attribute__((used)) = {
 
 size_t serial_write(const void *buf, size_t offset, size_t len)
 {
+  yield();
   char *str = (char *)buf;
   for (size_t i = 0; i < len; ++i)
   {
@@ -30,6 +31,7 @@ size_t serial_write(const void *buf, size_t offset, size_t len)
 
 size_t events_read(void *buf, size_t offset, size_t len)
 {
+  yield();
   static AM_INPUT_KEYBRD_T kbd;
   ioe_read(AM_INPUT_KEYBRD, &kbd);
   if (kbd.keycode == AM_KEY_NONE)
@@ -72,6 +74,7 @@ static char *__itoa(int num, char *buff)
 
 size_t dispinfo_read(void *buf, size_t offset, size_t len)
 {
+  yield();
   // printf("disp offset is %d\n", offset);
   // ioe_read(AM_GPU_CONFIG, &gpu_config);
   int width = gpu_config.width, height = gpu_config.height;
@@ -89,7 +92,7 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len)
 
 size_t fb_write(const void *buf, size_t offset, size_t len)
 {
-
+  yield();
   // printf("len is %d\n",len);
   if (len == 0)
   {

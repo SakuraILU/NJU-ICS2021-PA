@@ -7,18 +7,27 @@
 //     EVENT_IRQ_TIMER, EVENT_IRQ_IODEV,
 // }
 void do_syscall(Context *c);
+Context *schedule(Context *prev);
 
-static Context* do_event(Event e, Context* c) {
+static Context *do_event(Event e, Context *c)
+{
   // Log("event is %d\n",e.event);
-  switch (e.event) {
-    case EVENT_YIELD: printf("YEILD event happend!\n"); break;
-    case EVENT_SYSCALL: do_syscall(c); break;
-    default: panic("Unhandled event ID = %d", e.event);
+  switch (e.event)
+  {
+  case EVENT_YIELD:
+    c = schedule(c);
+    break;
+  case EVENT_SYSCALL:
+    do_syscall(c);
+    break;
+  default:
+    panic("Unhandled event ID = %d", e.event);
   }
   return c;
 }
 
-void init_irq(void) {
+void init_irq(void)
+{
   Log("Initializing interrupt/exception handler...");
   cte_init(do_event);
 }

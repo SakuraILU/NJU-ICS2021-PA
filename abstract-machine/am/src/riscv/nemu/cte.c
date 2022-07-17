@@ -35,10 +35,14 @@ Context *__am_irq_handle(Context *c)
 
     // printf("event id is %d\n",ev.event);
     c = user_handler(ev, c);
+    // printf("ctx address is %p\n", c);
     assert(c != NULL);
+    assert(c->mepc >= 0x80000000 && c->mepc <= 0x88000000);
   }
   // printf("ret from interrupt is %d\n",c->GPRx);
-
+  // ((void (*)())c->mepc)();
+  // printf("entry is %p\n", c->mepc);
+  // c->gpr[0] = 0;
   return c;
 }
 
@@ -59,7 +63,20 @@ bool cte_init(Context *(*handler)(Event, Context *))
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg)
 {
-  return NULL;
+  // return NULL;
+  Context *ctx = (Context *)((uint8_t *)(kstack.end) - sizeof(Context));
+  ctx->gpr[0] = 0;
+  ctx->mepc = (uintptr_t)entry;
+  ctx->mstatus = 0x1800;
+  ctx->GPRx = (uintptr_t)arg;
+  // printf("args is %d\n", *((int *)ctx->gpr[10]));
+  // while (1)
+  // {
+  //   /* code */
+  // }
+
+  // printf("ctx gpr 0 is %d\n", ctx->gpr[0]);
+  return ctx;
 }
 
 void yield()
