@@ -5,10 +5,13 @@
 #include <memory.h>
 
 #define STACK_SIZE (8 * PGSIZE)
+#define USR_STACK_PG_NUM 8
 
-typedef union {
+typedef union
+{
   uint8_t stack[STACK_SIZE] PG_ALIGN;
-  struct {
+  struct
+  {
     Context *cp;
     AddrSpace as;
     // we do not free memory, so use `max_brk' to determine when to call _map()

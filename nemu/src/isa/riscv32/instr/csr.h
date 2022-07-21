@@ -1,11 +1,5 @@
+#include <isa.h>
 
-
-#define CSRS_LIST(f) f(MTVEC), f(MEPC), f(MSTATUS), f(MCAUSE)
-#define REGNAME(name) concat(REG_, name)
-enum
-{
-  CSRS_LIST(REGNAME)
-};
 #define CASE(instr_id, enum_id) \
   case instr_id:                \
   {                             \
@@ -21,8 +15,9 @@ static inline uint8_t csr_id_instr2array(uint32_t instr_id)
     CASE(0x342, REG_MCAUSE);
     CASE(0x300, REG_MSTATUS);
     CASE(0x341, REG_MEPC);
+    CASE(0x180, REG_SATP);
   default:
-    Assert(0, "NOT a Valid CSR REGISTER!");
+    panic("0x%x is NOT a Valid CSR REGISTER!\n", instr_id);
     return -1;
   }
 }

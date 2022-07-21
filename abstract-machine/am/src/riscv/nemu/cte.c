@@ -3,17 +3,22 @@
 #include <klib.h>
 
 static Context *(*user_handler)(Event, Context *) = NULL;
+void __am_get_cur_as(Context *c);
+void __am_switch(Context *c);
 
 void display_context(Context *c)
 {
   for (int i = 0; i < sizeof(c->gpr) / sizeof(c->gpr[0]); ++i)
-    printf("x%d is %d\n", i, c->gpr[i]);
+    printf("x%p is %p\n", i, c->gpr[i]);
   printf("mcause, mstatus, mepc is %p, %p, %p\n", c->mcause, c->mstatus, c->mepc);
 }
 
 Context *__am_irq_handle(Context *c)
 {
-  // printf("cause to interrupt is %d\n",c->GPR1);
+  __am_get_cur_as(c);
+  // display_context(c);
+  // printf("pte is at %p\n", c->pdir);
+  // printf("cause to interrupt is %d\n", c->GPR1);
   // display_context(c);
   if (user_handler)
   {
@@ -34,15 +39,22 @@ Context *__am_irq_handle(Context *c)
     }
 
     // printf("event id is %d\n",ev.event);
+    // printf("here\n");
     c = user_handler(ev, c);
-    // printf("ctx address is %p\n", c);
+    // printf("===============");
+    // printf("mepc is %p\n", c->mepc);
+    // printf("c is at %p\n",c);
     assert(c != NULL);
-    assert(c->mepc >= 0x80000000 && c->mepc <= 0x88000000);
   }
-  // printf("ret from interrupt is %d\n",c->GPRx);
+  // printf("ret from interrupt is %p\n", c->GPRx);
   // ((void (*)())c->mepc)();
   // printf("entry is %p\n", c->mepc);
   // c->gpr[0] = 0;
+  // printf("pte is at %p after change\n", c->pdir);
+  // printf("sp is %p\n", c->gpr[2]);
+  // display_context(c);
+  assert(c->mepc >= 0x40000000 && c->mepc <= 0x88000000);
+  __am_switch(c);
   return c;
 }
 
@@ -69,6 +81,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg)
   ctx->mepc = (uintptr_t)entry;
   ctx->mstatus = 0x1800;
   ctx->GPRx = (uintptr_t)arg;
+  // ctx->pdir = NULL;
   // printf("args is %d\n", *((int *)ctx->gpr[10]));
   // while (1)
   // {

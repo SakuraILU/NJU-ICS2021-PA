@@ -2,17 +2,22 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
-
+#include <unistd.h>
+#include <string.h>
 int main(int argc, char *argv[], char *envp[]);
 extern char **environ;
 void call_main(uintptr_t *args)
 {
   // printf("arg is %p\n", args);
+  // write(1, "here\n", 10);
   int argc = *((int *)args);
 
   char **pargs = (char **)args + 1;
   char **argv = pargs;
-  // printf("argv0 is at %s\n", argv[0]);
+  // printf("\n\n\n\n");
+  // printf("argv0 is  %s\n", argv[0]);
+  // if (strcmp(argv[0], "/bin/hello"))
+  //   exit(1);
   // printf("argv1 is at %s\n", argv[1]);
 
   while (*pargs != NULL)

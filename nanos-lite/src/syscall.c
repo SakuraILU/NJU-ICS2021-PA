@@ -3,8 +3,8 @@
 #include <fs.h>
 #include <proc.h>
 
-static intptr_t heap_brk;
-static int brk(intptr_t addr);
+// static intptr_t heap_brk;
+// static int brk(intptr_t addr);
 
 typedef struct timeval
 {
@@ -20,8 +20,8 @@ static int gettimeofday(Timeval *tv, Timezone *tz);
 
 void naive_uload(PCB *pcb, const char *filename);
 int execve(const char *pathname, char *const argv[], char *const envp[]);
-
 void exit(int status);
+int mm_brk(uintptr_t brk);
 
 void do_syscall(Context *c)
 {
@@ -56,7 +56,7 @@ void do_syscall(Context *c)
     c->GPRx = execve((const char *)c->GPR2, (char **const)c->GPR3, (char **const)c->GPR4);
     break;
   case SYS_brk:
-    c->GPRx = (int)brk((intptr_t)c->GPR2);
+    c->GPRx = (int)mm_brk((uintptr_t)c->GPR2);
     break;
   case SYS_gettimeofday:
     c->GPRx = (int)gettimeofday((Timeval *)c->GPR2, (Timezone *)c->GPR3);
@@ -66,13 +66,13 @@ void do_syscall(Context *c)
   }
 }
 
-static int brk(intptr_t addr)
-{
-  // printf("the increment is %d\n", (int)increment);
-  heap_brk = (intptr_t)addr;
-  // printf("brk is %p\n",heap_brk);
-  return 0;
-}
+// static int brk(intptr_t addr)
+// {
+//   // printf("the increment is %d\n", (int)increment);
+//   heap_brk = (intptr_t)addr;
+//   // printf("brk is %p\n",heap_brk);
+//   return 0;
+// }
 
 static AM_TIMER_UPTIME_T uptime;
 static int gettimeofday(Timeval *tv, Timezone *tz)
@@ -87,12 +87,12 @@ static int gettimeofday(Timeval *tv, Timezone *tz)
   return 0;
 }
 
-void exit(int status)
-{
-  if (status == 0)
-  {
-    execve("/bin/nterm", 0, 0);
-  }
-  else
-    halt(status);
-}
+// void exit(int status)
+// {
+//   if (status == 0)
+//   {
+//     execve("/bin/nterm", 0, 0);
+//   }
+//   else
+//     halt(status);
+// }

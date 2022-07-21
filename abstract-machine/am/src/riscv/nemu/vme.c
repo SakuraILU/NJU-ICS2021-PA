@@ -18,6 +18,7 @@ static inline void set_satp(void *pdir)
   asm volatile("csrw satp, %0"
                :
                : "r"(mode | ((uintptr_t)pdir >> 12)));
+  // printf("store data %p in satp \n", mode | ((uintptr_t)pdir >> 12));
 }
 
 static inline uintptr_t get_satp()
@@ -35,13 +36,14 @@ bool vme_init(void *(*pgalloc_f)(int), void (*pgfree_f)(void *))
 
   kas.ptr = pgalloc_f(PGSIZE);
 
+  // printf("create page table at %p\n", kas.ptr);
   int i;
   for (i = 0; i < LENGTH(segments); i++)
   {
     void *va = segments[i].start;
     for (; va < segments[i].end; va += PGSIZE)
     {
-      map(&kas, va, va, 0);
+      map(&kas, va, va, PTE_R | PTE_W | PTE_X);
     }
   }
 
@@ -67,27 +69,47 @@ void unprotect(AddrSpace *as)
 
 void __am_get_cur_as(Context *c)
 {
-  c->pdir = (vme_enable ? (void *)get_satp() : NULL);
+  if (c->pdir != NULL)
+    c->pdir = (vme_enable ? (void *)get_satp() : NULL);
 }
 
 void __am_switch(Context *c)
 {
   if (vme_enable && c->pdir != NULL)
   {
+    // printf("pte is at %p after change\n", c->pdir);
     set_satp(c->pdir);
   }
 }
 
 void map(AddrSpace *as, void *va, void *pa, int prot)
 {
+#define PGT1_ID(val) (val >> 22)
+#define PGT2_ID(val) ((val & 0x3fffff) >> 12)
+  uint32_t pa_raw = (uint32_t)pa;
+  uint32_t va_raw = (uint32_t)va;
+  uint32_t **pt_1 = (uint32_t **)as->ptr;
+  if (pt_1[PGT1_ID(va_raw)] == NULL)
+    pt_1[PGT1_ID(va_raw)] = (uint32_t *)pgalloc_usr(PGSIZE);
+
+  uint32_t *pt_2 = pt_1[PGT1_ID(va_raw)];
+  if (pt_2[PGT2_ID(va_raw)] == 0)
+    pt_2[PGT2_ID(va_raw)] = (pa_raw & (~0xfff)) | prot;
+  else
+  {
+    Assert(0, "remap virtual address\n!");
+  }
+  // printf("map vrirtual address %p to physical address %p, pt2 id is %p, store addr %p\n", va_raw, pa_raw, PGT2_ID(va_raw), pt_2[PGT2_ID(va_raw)] >> 12);
 }
 
+#include <klib.h>
 Context *ucontext(AddrSpace *as, Area kstack, void *entry)
 {
 
   Context *ctx = (Context *)((uint8_t *)(kstack.end) - sizeof(Context));
 
   ctx->mepc = (uintptr_t)entry;
+  assert(ctx->mepc >= 0x40000000 && ctx->mepc <= 0x88000000);
 
   ctx->mstatus = 0x1800;
   ctx->gpr[0] = 0;
