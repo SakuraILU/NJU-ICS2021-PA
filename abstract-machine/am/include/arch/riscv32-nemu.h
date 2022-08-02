@@ -1,9 +1,10 @@
 #ifndef ARCH_H__
 #define ARCH_H__
 
-struct Context {
+struct Context
+{
   // TODO: fix the order of these members to match trap.S
-  uintptr_t gpr[32],  mcause, mstatus, mepc;
+  uintptr_t gpr[32], mcause, mstatus, mepc, mscratch;
   void *pdir;
 };
 

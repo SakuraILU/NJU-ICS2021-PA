@@ -12,6 +12,8 @@
 #endif
 
 #define min(x, y) ((x < y) ? x : y)
+
+extern uint8_t NR_PROC;
 // 从ramdisk中`offset`偏移处的`len`字节读入到`buf`中
 // size_t ramdisk_read(void *buf, size_t offset, size_t len);
 
@@ -121,6 +123,7 @@ Context *context_kload(PCB *pcb, void (*entry)(void *), void *arg)
   Area kstack = RANGE(pcb, (char *)pcb + STACK_SIZE);
   Context *ctx = kcontext(kstack, entry, arg);
   ctx->pdir = NULL;
+  NR_PROC++;
   return ctx;
 }
 
@@ -207,9 +210,11 @@ Context *context_uload(PCB *pcb, char *filename, char *const argv[], char *const
   ctx->pdir = pcb->as.ptr;
 
 #ifdef USR_SPACE_ENABLE
-  ctx->GPRx = (uintptr_t)((char *)sp_2 - map_offset);
-#else
-  ctx->GPRx = (uintptr_t)((char *)sp_2);
+  // ctx->GPRx = (uintptr_t)((char *)sp_2 - map_offset);
+  // ctx->mscratch = ctx->GPRx;
+  ctx->mscratch = (uintptr_t)((char *)sp_2 - map_offset);
+// #else
+// ctx->GPRx = (uintptr_t)((char *)sp_2);
 #endif
   // printf("map sp %p to %p\n", sp_2, ctx->GPRx);
   pcb->max_brk = 0;
@@ -217,6 +222,7 @@ Context *context_uload(PCB *pcb, char *filename, char *const argv[], char *const
   // printf("the argc is at %p\n", sp_2);
   // printf("arg1 is %s\n", *((char **)(sp_2 + 2)));
   // printf("arg0 is %s\n", *((char **)(ctx->GPRx + 1)));
+  NR_PROC++;
 
   return ctx;
 }

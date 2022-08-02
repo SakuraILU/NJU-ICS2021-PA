@@ -1,4 +1,5 @@
 #include <common.h>
+#include <proc.h>
 
 #if defined(MULTIPROGRAM) && !defined(TIME_SHARING)
 #define MULTIPROGRAM_YIELD() yield()
@@ -18,9 +19,11 @@ static const char *keyname[256] __attribute__((used)) = {
 
 #define NUM_LEN 32
 
+void set_fg_pcb(uint32_t process_id);
+
 size_t serial_write(const void *buf, size_t offset, size_t len)
 {
-  yield();
+  // yield();
   char *str = (char *)buf;
   for (size_t i = 0; i < len; ++i)
   {
@@ -31,7 +34,7 @@ size_t serial_write(const void *buf, size_t offset, size_t len)
 
 size_t events_read(void *buf, size_t offset, size_t len)
 {
-  yield();
+  // yield();
   static AM_INPUT_KEYBRD_T kbd;
   ioe_read(AM_INPUT_KEYBRD, &kbd);
   if (kbd.keycode == AM_KEY_NONE)
@@ -44,6 +47,21 @@ size_t events_read(void *buf, size_t offset, size_t len)
   // printf("key name is %s\n",keyname[kbd.keycode]);
   strncat(buf, keyname[kbd.keycode], len - 3);
   strncat(buf, "\n", len - 3 - strlen(keyname[kbd.keycode]));
+
+  switch (kbd.keycode)
+  {
+  case AM_KEY_F1:
+    set_fg_pcb(1); /* constant-expression */
+    break;
+  case AM_KEY_F2:
+    set_fg_pcb(2); /* constant-expression */
+    break;
+  case AM_KEY_F3:
+    set_fg_pcb(3); /* constant-expression */
+    break;
+  default:
+    break;
+  }
 
   return strlen(buf);
 }
@@ -74,7 +92,7 @@ static char *__itoa(int num, char *buff)
 
 size_t dispinfo_read(void *buf, size_t offset, size_t len)
 {
-  yield();
+  // yield();
   // printf("disp offset is %d\n", offset);
   // ioe_read(AM_GPU_CONFIG, &gpu_config);
   int width = gpu_config.width, height = gpu_config.height;
@@ -92,7 +110,7 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len)
 
 size_t fb_write(const void *buf, size_t offset, size_t len)
 {
-  yield();
+  // yield();
   // printf("len is %d\n",len);
   if (len == 0)
   {

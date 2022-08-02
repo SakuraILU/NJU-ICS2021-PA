@@ -1,6 +1,7 @@
 #include <am.h>
 #include <riscv/riscv.h>
 #include <klib.h>
+#include <nemu.h>
 
 static Context *(*user_handler)(Event, Context *) = NULL;
 void __am_get_cur_as(Context *c);
@@ -15,7 +16,7 @@ void display_context(Context *c)
 
 Context *__am_irq_handle(Context *c)
 {
-  __am_get_cur_as(c);
+  // __am_get_cur_as(c);
   // display_context(c);
   // printf("pte is at %p\n", c->pdir);
   // printf("cause to interrupt is %d\n", c->GPR1);
@@ -33,6 +34,9 @@ Context *__am_irq_handle(Context *c)
     case 0 ... 19:
       ev.event = EVENT_SYSCALL;
       break;
+    case 0x80000007:
+      ev.event = EVENT_IRQ_TIMER;
+      break;
     default:
       ev.event = EVENT_ERROR;
       break;
@@ -48,13 +52,13 @@ Context *__am_irq_handle(Context *c)
   }
   // printf("ret from interrupt is %p\n", c->GPRx);
   // ((void (*)())c->mepc)();
-  // printf("entry is %p\n", c->mepc);
   // c->gpr[0] = 0;
-  // printf("pte is at %p after change\n", c->pdir);
+  // printf("pte is at %p after change\n", c->mepc);
   // printf("sp is %p\n", c->gpr[2]);
   // display_context(c);
   assert(c->mepc >= 0x40000000 && c->mepc <= 0x88000000);
-  __am_switch(c);
+  // __am_switch(c);
+  // printf("entry is %p\n", c->mepc);
   return c;
 }
 
@@ -77,11 +81,14 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg)
 {
   // return NULL;
   Context *ctx = (Context *)((uint8_t *)(kstack.end) - sizeof(Context));
+  memset(ctx, 0, sizeof(ctx));
+
   ctx->gpr[0] = 0;
   ctx->mepc = (uintptr_t)entry;
-  ctx->mstatus = 0x1800;
+  ctx->mstatus = 0x1800 | MSTATUS_MPIE;
   ctx->GPRx = (uintptr_t)arg;
   // ctx->pdir = NULL;
+  ctx->mscratch = 0;
   // printf("args is %d\n", *((int *)ctx->gpr[10]));
   // while (1)
   // {

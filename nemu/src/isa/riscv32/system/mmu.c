@@ -22,13 +22,13 @@ paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type)
 
   assert(pt_2 != NULL);
   paddr_t paddr = (paddr_t)((pt_2[PGT2_ID(va_raw)] & (~0xfff)) | OFFSET(va_raw));
-  // if (vaddr >= 0x4000bfe0 && vaddr <= 0x40018fe0)
+  // if (vaddr >= 0x40000000 && vaddr <= 0x8000000)
   // {
   // printf("mmu translate vaddr %p\n", (void *)(long)vaddr);
   // printf("translate ui is 0x%x, pt2 id is %x\n", pt_2[PGT2_ID(va_raw)] >> 12, PGT2_ID(va_raw));
   // printf("mmu translate to paddr %p\n", (void *)(long)paddr);
   // } // printf("vaddr is 0x%x, paddr is 0x%x\n", vaddr, paddr);
-  // printf("here\n");
+  assert(vaddr >= 0x40000000 && vaddr <= 0xa1200000);
   // assert(paddr == vaddr);
   // return MEM_RET_FAIL;
   return paddr;

@@ -75,9 +75,10 @@ void __am_get_cur_as(Context *c)
 
 void __am_switch(Context *c)
 {
+  // printf("change ctx\n");
   if (vme_enable && c->pdir != NULL)
   {
-    // printf("pte is at %p after change\n", c->pdir);
+    // printf("pte is at %p after change\n", c);
     set_satp(c->pdir);
   }
 }
@@ -107,13 +108,15 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry)
 {
 
   Context *ctx = (Context *)((uint8_t *)(kstack.end) - sizeof(Context));
+  memset(ctx, 0, sizeof(ctx));
 
   ctx->mepc = (uintptr_t)entry;
   assert(ctx->mepc >= 0x40000000 && ctx->mepc <= 0x88000000);
 
-  ctx->mstatus = 0x1800;
+  ctx->mstatus = 0x1800 | MSTATUS_MPIE;
   ctx->gpr[0] = 0;
 
+  ctx->mscratch = (uintptr_t)kstack.end;
   // ctx->GPRx = (uintptr_t)(heap.end);
   // printf("the heap end is %p\n", heap.end);
 
